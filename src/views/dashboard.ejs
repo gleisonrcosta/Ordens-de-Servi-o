@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Sistema de Ordem de Serviço</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="app-body">
+  <aside class="sidebar">
+    <div class="sidebar-brand">OS</div>
+    <nav>
+      <a class="active" href="/dashboard">Dashboard</a>
+      <a href="/orders/new">Nova OS</a>
+      <% if (user.role === 'admin') { %><a href="/admin">Admin</a><% } %>
+    </nav>
+  </aside>
+  <main class="content">
+    <header class="topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Olá, <%= user.name %></p>
+      </div>
+      <div class="topbar-actions">
+        <% if (user.role === 'admin') { %><a class="ghost link-button" href="/admin/users/new">Novo usuário</a><% } %>
+        <% if (user.role === 'admin') { %><a class="ghost link-button" href="/admin/integrations">Integrações</a><% } %>
+        <form method="post" action="/logout"><button class="ghost">Sair</button></form>
+      </div>
+    </header>
+    <section class="stats-grid">
+      <article class="stat blue"><strong><%= stats.openCount || 0 %></strong><span>Ordens Abertas</span></article>
+      <article class="stat orange"><strong><%= stats.progressCount || 0 %></strong><span>Em Andamento</span></article>
+      <article class="stat red"><strong><%= stats.canceledCount || 0 %></strong><span>Canceladas</span></article>
+      <article class="stat green"><strong><%= stats.doneCount || 0 %></strong><span>Concluídas</span></article>
+    </section>
+    <section class="cards">
+      <article class="panel">
+        <h2>Ordens Recentes</h2>
+        <table>
+          <thead><tr><th>Número</th><th>Empresa</th><th>Status</th><th>Origem</th></tr></thead>
+          <tbody>
+            <% orders.forEach(order => { %>
+              <tr>
+                <td><a href="/orders/<%= order.id %>"><%= order.os_number %></a></td>
+                <td><%= order.company_name %></td>
+                <td><%= order.status %></td>
+                <td><%= order.source %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

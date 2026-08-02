@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login | Sistema de Ordem de Serviço</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <section class="auth-panel">
+      <div class="brand">
+        <div>
+          <h1>CCA TELECOMUNICAÇÕES</h1>
+          <p>Acesse com seu telefone e senha.</p>
+        </div>
+      </div>
+      <form method="post" action="/login" class="auth-form">
+        <% if (error) { %>
+          <div class="alert error"><%= error %></div>
+        <% } %>
+        <label>Telefone</label>
+        <input type="tel" name="phone" placeholder="(11) 99999-9999" required />
+        <label>Senha</label>
+        <input type="password" name="password" placeholder="Sua senha" required />
+        <button type="submit">Entrar</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

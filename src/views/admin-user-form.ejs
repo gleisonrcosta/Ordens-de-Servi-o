@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="app-body">
+  <main class="content wide">
+    <a href="/admin">Voltar</a>
+    <h1><%= title %></h1>
+    <% if (error) { %><div class="alert error"><%= error %></div><% } %>
+    <form method="post" action="<%= action %>" class="form-grid">
+      <input name="name" placeholder="Nome" value="<%= user.name %>" required />
+      <input name="phone" placeholder="Telefone" value="<%= user.phone %>" required />
+      <input name="password" type="password" placeholder="<%= action.includes('/edit') ? 'Nova senha (opcional)' : 'Senha' %>" <%= action.includes('/edit') ? '' : 'required' %> />
+      <select name="role" required>
+        <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>Usuário</option>
+        <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Administrador</option>
+      </select>
+      <label class="checkbox-row">
+        <input type="checkbox" name="active" <%= user.active ? 'checked' : '' %> />
+        Ativo
+      </label>
+      <button type="submit">Salvar</button>
+    </form>
+  </main>
+</body>
+</html>

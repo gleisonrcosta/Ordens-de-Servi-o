@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detalhe da OS</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="app-body">
+  <main class="content wide">
+    <a href="/dashboard">Voltar</a>
+    <h1><%= order.os_number %></h1>
+    <% if (error) { %><div class="alert error"><%= error %></div><% } %>
+    <div class="panel">
+      <p><strong>Empresa:</strong> <%= order.company_name %></p>
+      <p><strong>Contato:</strong> <%= order.contact_phone %></p>
+      <p><strong>Contato no local:</strong> <%= order.on_site_contact %></p>
+      <p><strong>Status:</strong> <%= order.status %></p>
+      <p><strong>Descrição:</strong> <%= order.problem_description %></p>
+    </div>
+    <div class="panel">
+      <h2>Interagir com a OS</h2>
+      <form method="post" action="/orders/<%= order.id %>/comments" class="form-grid">
+        <select name="status">
+          <option value="">Manter status atual</option>
+          <option value="open">Aberta</option>
+          <option value="in_progress">Em andamento</option>
+          <option value="waiting_client">Aguardando cliente</option>
+          <option value="done">Concluída</option>
+          <option value="canceled">Cancelada</option>
+        </select>
+        <textarea name="comment" placeholder="Adicionar comentário"></textarea>
+        <button type="submit">Salvar interação</button>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>Interações</h2>
+      <% events.forEach(event => { %>
+        <div class="event">
+          <strong><%= event.event_type %></strong>
+          <span><%= event.message %></span>
+        </div>
+      <% }) %>
+    </div>
+  </main>
+</body>
+</html>

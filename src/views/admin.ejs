@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="app-body">
+  <main class="content wide">
+    <header class="topbar">
+      <div>
+        <h1>Painel do Administrador</h1>
+        <p>Gerencie ordens, notificações e usuários.</p>
+      </div>
+      <div class="topbar-actions">
+        <a class="ghost link-button" href="/admin/users/new">Novo usuário</a>
+        <a class="ghost link-button" href="/admin/integrations">Integrações</a>
+        <a class="ghost link-button" href="/dashboard">Dashboard</a>
+      </div>
+    </header>
+    <section class="cards">
+      <article class="panel">
+        <h2>Notificações</h2>
+        <% notifications.forEach(n => { %>
+          <div class="event"><strong><%= n.os_number %></strong><span><%= n.title %> - <%= n.body %></span></div>
+        <% }) %>
+      </article>
+      <article class="panel">
+        <h2>Ordens recentes</h2>
+        <% orders.forEach(order => { %>
+          <div class="event"><strong><%= order.os_number %></strong><span><%= order.company_name %> - <%= order.status %></span></div>
+        <% }) %>
+      </article>
+      <article class="panel">
+        <h2>Usuários</h2>
+        <table>
+          <thead>
+            <tr><th>Nome</th><th>Telefone</th><th>Perfil</th><th>Ativo</th><th>Ações</th></tr>
+          </thead>
+          <tbody>
+            <% users.forEach(u => { %>
+              <tr>
+                <td><%= u.name %></td>
+                <td><%= u.phone %></td>
+                <td><%= u.role %></td>
+                <td><%= u.active ? 'Sim' : 'Não' %></td>
+                <td class="actions">
+                  <a class="text-link" href="/admin/users/<%= u.id %>/edit">Editar</a>
+                  <form method="post" action="/admin/users/<%= u.id %>/toggle">
+                    <button class="ghost small" type="submit"><%= u.active ? 'Desativar' : 'Ativar' %></button>
+                  </form>
+                  <form method="post" action="/admin/users/<%= u.id %>/delete" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?');">
+                    <button class="ghost small danger" type="submit" <%= u.id === user.id ? 'disabled' : '' %>>Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

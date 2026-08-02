@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Integrações</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="app-body">
+  <aside class="sidebar">
+    <div class="sidebar-brand">OS</div>
+    <nav>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/orders/new">Nova OS</a>
+      <a href="/admin">Admin</a>
+      <a class="active" href="/admin/integrations">Integrações</a>
+    </nav>
+  </aside>
+  <main class="content wide">
+    <header class="topbar">
+      <div>
+        <h1>Integrações</h1>
+        <p>Configurações do WhatsApp e token de API.</p>
+      </div>
+      <a class="ghost link-button" href="/admin">Voltar</a>
+    </header>
+
+    <% if (error) { %><div class="alert error"><%= error %></div><% } %>
+
+    <section class="cards">
+      <article class="panel">
+        <h2>WhatsApp</h2>
+        <form method="post" action="/admin/integrations" class="form-grid">
+          <input name="whatsappApiUrl" placeholder="URL da API do WhatsApp" value="<%= integration.whatsapp_api_url || '' %>" />
+          <input name="whatsappPhoneNumberId" placeholder="Phone Number ID" value="<%= integration.whatsapp_phone_number_id || '' %>" />
+          <input name="whatsappAccessToken" placeholder="Access Token" value="<%= integration.whatsapp_access_token || '' %>" />
+          <input name="webhookToken" placeholder="Webhook Token" value="<%= integration.webhook_token || '' %>" />
+          <label class="checkbox-row">
+            <input type="checkbox" name="active" <%= integration.active ? 'checked' : '' %> />
+            Integração ativa
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" name="keepApiToken" />
+            Manter token atual da API
+          </label>
+          <button type="submit">Salvar integrações</button>
+        </form>
+      </article>
+
+      <article class="panel">
+        <h2>Token da API</h2>
+        <p>Use este token no header `x-api-token` ou `x-webhook-token` para abrir OS via WhatsApp.</p>
+        <div class="token-box"><%= integration.api_token || 'Nenhum token gerado ainda' %></div>
+        <% if (generatedToken) { %>
+          <div class="alert success">Novo token gerado com sucesso. Guarde-o agora, pois ele será usado nas chamadas da API.</div>
+        <% } %>
+        <form method="post" action="/admin/integrations/token">
+          <button type="submit">Gerar novo token</button>
+        </form>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
