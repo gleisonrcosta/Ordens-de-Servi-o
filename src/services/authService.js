@@ -1,8 +1,13 @@
 const bcrypt = require('bcryptjs');
 const db = require('../db');
 
+function normalizePhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
 async function findUserByPhone(phone) {
-  const [rows] = await db.execute('SELECT * FROM users WHERE phone = ? AND active = 1', [phone]);
+  const normalized = normalizePhone(phone);
+  const [rows] = await db.execute('SELECT * FROM users WHERE phone = ? AND active = 1', [normalized]);
   return rows[0] || null;
 }
 
@@ -14,7 +19,7 @@ async function createUser({ name, phone, password, role = 'user' }) {
   const passwordHash = await bcrypt.hash(password, 10);
   const [result] = await db.execute(
     'INSERT INTO users (name, phone, password_hash, role) VALUES (?, ?, ?, ?)',
-    [name, phone, passwordHash, role]
+    [name, normalizePhone(phone), passwordHash, role]
   );
   return result.insertId;
 }
@@ -40,7 +45,7 @@ async function getUserById(id) {
 
 async function updateUser(id, { name, phone, password, role, active }) {
   const fields = ['name = ?', 'phone = ?', 'role = ?', 'active = ?'];
-  const params = [name, phone, role, active ? 1 : 0];
+  const params = [name, normalizePhone(phone), role, active ? 1 : 0];
 
   if (password) {
     const passwordHash = await bcrypt.hash(password, 10);

@@ -1,6 +1,10 @@
 const bcrypt = require('bcryptjs');
 const db = require('../src/db');
 
+function normalizePhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
 async function main() {
   const name = process.env.ADMIN_NAME || 'Administrador';
   const phone = process.env.ADMIN_PHONE || '11999999999';
@@ -15,7 +19,7 @@ async function main() {
        password_hash = VALUES(password_hash),
        role = 'admin',
        active = 1`,
-    [name, phone, passwordHash]
+    [name, normalizePhone(phone), passwordHash]
   );
 
   console.log(`Admin criado/atualizado: ${name} (${phone})`);
