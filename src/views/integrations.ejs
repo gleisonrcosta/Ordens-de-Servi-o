@@ -58,6 +58,23 @@
           <button type="submit">Gerar novo token</button>
         </form>
       </article>
+
+      <article class="panel">
+        <h2>Exemplo de cURL</h2>
+        <p>Você pode consultar este exemplo sempre que precisar testar a abertura de uma OS via API.</p>
+        <pre class="code-block"><code>curl --request POST \
+  --url http://SEU_HOST:3000/api/webhook/whatsapp/os \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --header 'x-webhook-token: SEU_TOKEN_INTERNO' \
+  --data '{
+  "companyName": "Empresa X",
+  "contactPhone": "5531985403218",
+  "onSiteContact": "João Silva",
+  "problemDescription": "Sem internet no setor financeiro"
+}'</code></pre>
+        <p class="muted-note">Se quiser chamar direto a Uazapi, use o endpoint dela com o token salvo nas integrações.</p>
+      </article>
     </section>
   </main>
 </body>
