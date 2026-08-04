@@ -96,7 +96,7 @@ app.post('/orders', requireAuth, async (req, res) => {
         await integrationService.sendWhatsappText(
           integration,
           target.phone,
-          `Nova OS ${order.os_number}\nEmpresa: ${order.company_name}\nContato: ${order.contact_phone}\nLocal: ${order.on_site_contact}\nProblema: ${order.problem_description}`
+          `Nova OS ${order.os_number}\nEmpresa: ${order.company_name}\nWhatsApp: ${order.contact_phone}\nResponsável no local: ${order.on_site_contact}\nProblema: ${order.problem_description}`
         );
       } catch (error) {
         console.error('Falha ao enviar WhatsApp para criação da OS:', error.message);
