@@ -11,6 +11,12 @@ async function findUserByPhone(phone) {
   return rows[0] || null;
 }
 
+async function findAnyUserByPhone(phone) {
+  const normalized = normalizePhone(phone);
+  const [rows] = await db.execute('SELECT * FROM users WHERE phone = ?', [normalized]);
+  return rows[0] || null;
+}
+
 async function verifyPassword(user, password) {
   return bcrypt.compare(password, user.password_hash);
 }
@@ -22,6 +28,16 @@ async function createUser({ name, phone, password, role = 'user' }) {
     [name, normalizePhone(phone), passwordHash, role]
   );
   return result.insertId;
+}
+
+async function createUserIfMissing({ name, phone, password, role = 'user' }) {
+  const existing = await findAnyUserByPhone(phone);
+  if (existing) {
+    return { user: existing, created: false };
+  }
+  const id = await createUser({ name, phone, password, role });
+  const user = await getUserById(id);
+  return { user, created: true };
 }
 
 async function getUsers() {
@@ -72,8 +88,10 @@ async function deleteUser(id) {
 
 module.exports = {
   findUserByPhone,
+  findAnyUserByPhone,
   verifyPassword,
   createUser,
+  createUserIfMissing,
   getUsers,
   getUserById,
   updateUser,
