@@ -58,6 +58,46 @@ app.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login'));
 });
 
+app.get('/profile/password', requireAuth, async (req, res) => {
+  res.render('profile-password', { error: null, success: null });
+});
+
+app.post('/profile/password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return res.status(400).render('profile-password', {
+      error: 'Preencha a senha atual e a nova senha.',
+      success: null
+    });
+  }
+  if (newPassword !== confirmPassword) {
+    return res.status(400).render('profile-password', {
+      error: 'A nova senha e a confirmação não conferem.',
+      success: null
+    });
+  }
+  const user = await authService.getUserById(req.session.user.id);
+  if (!user) return res.status(404).send('Usuário não encontrado.');
+  const ok = await authService.verifyPassword(user, currentPassword);
+  if (!ok) {
+    return res.status(401).render('profile-password', {
+      error: 'Senha atual inválida.',
+      success: null
+    });
+  }
+  await authService.updateUser(user.id, {
+    name: user.name,
+    phone: user.phone,
+    password: newPassword,
+    role: user.role,
+    active: user.active
+  });
+  return res.render('profile-password', {
+    error: null,
+    success: 'Senha atualizada com sucesso.'
+  });
+});
+
 app.get('/dashboard', requireAuth, async (req, res) => {
   const statusFilter = String(req.query.status || '').trim();
   const allowedStatuses = new Set(['open', 'in_progress', 'waiting_client', 'done', 'canceled']);
@@ -381,10 +421,7 @@ app.post('/admin/users/:id/delete', requireAdmin, async (req, res) => {
     return res.status(400).send('Você não pode excluir seu próprio usuário.');
   }
   if (user.role === 'admin') {
-    const activeAdmins = await authService.countActiveAdmins();
-    if (activeAdmins <= 1) {
-      return res.status(400).send('Não é possível excluir o último administrador ativo.');
-    }
+    return res.status(400).send('Usuários administradores não podem ser excluídos.');
   }
   await authService.deleteUser(req.params.id);
   return res.redirect('/admin');

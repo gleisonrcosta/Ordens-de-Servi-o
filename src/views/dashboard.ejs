@@ -24,6 +24,7 @@
       <div class="topbar-actions">
         <% if (user.role === 'admin') { %><a class="ghost link-button" href="/admin/users/new">Novo usuário</a><% } %>
         <% if (user.role === 'admin') { %><a class="ghost link-button" href="/admin/integrations">Integrações</a><% } %>
+        <a class="ghost link-button" href="/profile/password">Alterar senha</a>
         <form method="post" action="/logout"><button class="ghost">Sair</button></form>
       </div>
     </header>
