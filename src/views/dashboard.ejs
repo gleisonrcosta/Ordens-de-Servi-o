@@ -59,13 +59,7 @@
               <tr>
                 <td><a href="/orders/<%= order.id %>"><%= order.os_number %></a></td>
                 <td><%= order.company_name %></td>
-                <td>
-                  <% if (order.status === 'open') { %>Aberta<% } %>
-                  <% if (order.status === 'in_progress') { %>Em andamento<% } %>
-                  <% if (order.status === 'waiting_client') { %>Aguardando cliente<% } %>
-                  <% if (order.status === 'done') { %>Concluída<% } %>
-                  <% if (order.status === 'canceled') { %>Cancelada<% } %>
-                </td>
+                <td><%= statusLabel(order.status) %></td>
                 <td><%= order.source %></td>
               </tr>
             <% }) %>

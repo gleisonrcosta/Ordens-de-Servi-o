@@ -31,7 +31,7 @@
         <% orders.forEach(order => { %>
           <div class="event">
             <strong><%= order.os_number %></strong>
-            <span><%= order.company_name %> - <% if (order.status === 'open') { %>Aberta<% } %><% if (order.status === 'in_progress') { %>Em andamento<% } %><% if (order.status === 'waiting_client') { %>Aguardando cliente<% } %><% if (order.status === 'done') { %>Concluída<% } %><% if (order.status === 'canceled') { %>Cancelada<% } %></span>
+            <span><%= order.company_name %> - <%= statusLabel(order.status) %></span>
           </div>
         <% }) %>
       </article>

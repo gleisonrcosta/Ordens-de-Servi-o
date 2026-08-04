@@ -30,6 +30,16 @@ app.use(session({
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.dayjs = dayjs;
+  res.locals.statusLabel = (status) => {
+    const labels = {
+      open: 'Aberta',
+      in_progress: 'Em andamento',
+      waiting_client: 'Aguardando cliente',
+      done: 'Concluída',
+      canceled: 'Cancelada'
+    };
+    return labels[status] || status;
+  };
   next();
 });
 
@@ -203,9 +213,9 @@ app.post('/orders/:id/comments', requireAuth, async (req, res) => {
       await db.execute('UPDATE service_orders SET status = ? WHERE id = ?', [status, req.params.id]);
       const statusMessage = `Status atualizado para ${status} na OS ${order.os_number}.`;
       await orderService.addOrderEvent(req.params.id, req.session.user.id, 'status_changed', statusMessage);
-      await orderService.notifyAdmins(req.params.id, `OS ${order.os_number} atualizada`, statusMessage);
+      await orderService.notifyAdmins(req.params.id, `OS ${order.os_number} atualizada`, `Status atualizado para ${res.locals.statusLabel(status)} na OS ${order.os_number}.`);
       if (order.opened_by_user_id) {
-        await orderService.notifyUser(req.params.id, order.opened_by_user_id, `OS ${order.os_number} atualizada`, statusMessage);
+        await orderService.notifyUser(req.params.id, order.opened_by_user_id, `OS ${order.os_number} atualizada`, `Status atualizado para ${res.locals.statusLabel(status)} na OS ${order.os_number}.`);
       }
     }
 
@@ -224,7 +234,7 @@ app.post('/orders/:id/comments', requireAuth, async (req, res) => {
       if (!target.phone) continue;
       try {
         const lines = [`OS ${order.os_number} atualizada`];
-        if (status && status !== order.status) lines.push(`Novo status: ${status}`);
+        if (status && status !== order.status) lines.push(`Novo status: ${res.locals.statusLabel(status)}`);
         if (comment) lines.push(`Comentário: ${comment}`);
         await integrationService.sendWhatsappText(integration, target.phone, lines.join('\n'));
       } catch (error) {
