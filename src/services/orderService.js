@@ -69,6 +69,21 @@ async function notifyUser(serviceOrderId, userId, title, body) {
   );
 }
 
+async function getNotificationTargetsForOrder(serviceOrderId) {
+  const [rows] = await db.execute(
+    `SELECT DISTINCT u.id, u.name, u.phone, u.role
+     FROM users u
+     WHERE (u.role = 'admin' AND u.active = 1)
+        OR u.id = (
+          SELECT opened_by_user_id
+          FROM service_orders
+          WHERE id = ? AND opened_by_user_id IS NOT NULL
+        )`,
+    [serviceOrderId]
+  );
+  return rows;
+}
+
 async function getServiceOrderById(id) {
   const [rows] = await db.execute(
     `SELECT so.*, u.name AS opened_by_name, u.phone AS opened_by_phone
@@ -97,6 +112,7 @@ module.exports = {
   addOrderComment,
   notifyAdmins,
   notifyUser,
+  getNotificationTargetsForOrder,
   getServiceOrderById,
   getRecentOrders
 };

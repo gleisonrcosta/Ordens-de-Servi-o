@@ -87,6 +87,21 @@ app.post('/orders', requireAuth, async (req, res) => {
     await orderService.notifyAdmins(order.id, `Nova OS ${order.os_number}`, body);
     await orderService.notifyUser(order.id, req.session.user.id, `OS ${order.os_number} aberta`, body);
     await orderService.addOrderEvent(order.id, req.session.user.id, 'created', 'Ordem aberta via sistema.');
+
+    const integration = await integrationService.getIntegration('whatsapp');
+    const targets = await orderService.getNotificationTargetsForOrder(order.id);
+    for (const target of targets) {
+      if (!target.phone) continue;
+      try {
+        await integrationService.sendWhatsappText(
+          integration,
+          target.phone,
+          `Nova OS ${order.os_number}\nEmpresa: ${order.company_name}\nContato: ${order.contact_phone}\nLocal: ${order.on_site_contact}\nProblema: ${order.problem_description}`
+        );
+      } catch (error) {
+        console.error('Falha ao enviar WhatsApp para criação da OS:', error.message);
+      }
+    }
     res.redirect(`/orders/${order.id}`);
   } catch (error) {
     res.status(500).render('orders-new', { error: 'Não foi possível abrir a ordem de serviço.' });
@@ -149,6 +164,20 @@ app.post('/orders/:id/comments', requireAuth, async (req, res) => {
       await orderService.notifyAdmins(req.params.id, `Comentário na OS ${order.os_number}`, commentMessage);
       if (order.opened_by_user_id) {
         await orderService.notifyUser(req.params.id, order.opened_by_user_id, `Comentário na OS ${order.os_number}`, commentMessage);
+      }
+    }
+
+    const integration = await integrationService.getIntegration('whatsapp');
+    const targets = await orderService.getNotificationTargetsForOrder(order.id);
+    for (const target of targets) {
+      if (!target.phone) continue;
+      try {
+        const lines = [`OS ${order.os_number} atualizada`];
+        if (status && status !== order.status) lines.push(`Novo status: ${status}`);
+        if (comment) lines.push(`Comentário: ${comment}`);
+        await integrationService.sendWhatsappText(integration, target.phone, lines.join('\n'));
+      } catch (error) {
+        console.error('Falha ao enviar WhatsApp na atualização da OS:', error.message);
       }
     }
 

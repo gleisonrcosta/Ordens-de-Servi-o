@@ -47,8 +47,56 @@ async function upsertIntegration(name, data) {
   return getIntegration(name);
 }
 
+function buildUazapiConfig(integration) {
+  if (!integration) return null;
+  return {
+    url: integration.whatsapp_api_url || 'https://agenciai43.uazapi.com/send/text',
+    token: integration.whatsapp_access_token || '',
+    active: Number(integration.active) === 1
+  };
+}
+
+function normalizePhone(phone) {
+  return String(phone || '').replace(/\D/g, '');
+}
+
+async function sendWhatsappText(integration, number, text) {
+  const config = buildUazapiConfig(integration);
+  if (!config || !config.active || !config.url || !config.token) {
+    return { skipped: true };
+  }
+
+  const response = await fetch(config.url, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      token: config.token
+    },
+    body: JSON.stringify({
+      number: normalizePhone(number),
+      text
+    })
+  });
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(payload?.message || payload?.error || `Uazapi respondeu ${response.status}`);
+  }
+
+  return payload;
+}
+
 module.exports = {
   getIntegration,
   generateToken,
-  upsertIntegration
+  upsertIntegration,
+  sendWhatsappText,
+  normalizePhone
 };
