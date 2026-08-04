@@ -28,19 +28,19 @@
       </div>
     </header>
     <section class="stats-grid">
-      <a class="stat-card blue <%= !filterStatus ? 'active' : '' %>" href="/dashboard">
+      <a class="stat stat-card blue <%= !filterStatus ? 'active' : '' %>" href="/dashboard">
         <strong><%= stats.openCount || 0 %></strong>
         <span>Abertas</span>
       </a>
-      <a class="stat-card orange <%= filterStatus === 'in_progress' ? 'active' : '' %>" href="/dashboard?status=in_progress">
+      <a class="stat stat-card orange <%= filterStatus === 'in_progress' ? 'active' : '' %>" href="/dashboard?status=in_progress">
         <strong><%= stats.progressCount || 0 %></strong>
         <span>Em andamento</span>
       </a>
-      <a class="stat-card red <%= filterStatus === 'canceled' ? 'active' : '' %>" href="/dashboard?status=canceled">
+      <a class="stat stat-card red <%= filterStatus === 'canceled' ? 'active' : '' %>" href="/dashboard?status=canceled">
         <strong><%= stats.canceledCount || 0 %></strong>
         <span>Canceladas</span>
       </a>
-      <a class="stat-card green <%= filterStatus === 'done' ? 'active' : '' %>" href="/dashboard?status=done">
+      <a class="stat stat-card green <%= filterStatus === 'done' ? 'active' : '' %>" href="/dashboard?status=done">
         <strong><%= stats.doneCount || 0 %></strong>
         <span>Concluídas</span>
       </a>
