@@ -84,6 +84,26 @@ async function getNotificationTargetsForOrder(serviceOrderId) {
   return rows;
 }
 
+async function getActiveAdmins() {
+  const [rows] = await db.execute(
+    `SELECT id, name, phone
+     FROM users
+     WHERE role = 'admin' AND active = 1`
+  );
+  return rows;
+}
+
+async function getOrderOpenedByUser(serviceOrderId) {
+  const [rows] = await db.execute(
+    `SELECT u.id, u.name, u.phone
+     FROM service_orders so
+     JOIN users u ON u.id = so.opened_by_user_id
+     WHERE so.id = ? AND so.opened_by_user_id IS NOT NULL`,
+    [serviceOrderId]
+  );
+  return rows[0] || null;
+}
+
 async function getServiceOrderById(id) {
   const [rows] = await db.execute(
     `SELECT so.*, u.name AS opened_by_name, u.phone AS opened_by_phone
@@ -113,6 +133,8 @@ module.exports = {
   notifyAdmins,
   notifyUser,
   getNotificationTargetsForOrder,
+  getActiveAdmins,
+  getOrderOpenedByUser,
   getServiceOrderById,
   getRecentOrders
 };

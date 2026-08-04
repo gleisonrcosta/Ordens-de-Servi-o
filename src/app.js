@@ -150,17 +150,29 @@ app.post('/orders', requireAuth, async (req, res) => {
     await orderService.addOrderEvent(order.id, req.session.user.id, 'created', 'Ordem aberta via sistema.');
 
     const integration = await integrationService.getIntegration('whatsapp');
-    const targets = await orderService.getNotificationTargetsForOrder(order.id);
-    for (const target of targets) {
-      if (!target.phone) continue;
+    const admins = await orderService.getActiveAdmins();
+    for (const admin of admins) {
+      if (!admin.phone) continue;
       try {
         await integrationService.sendWhatsappText(
           integration,
-          target.phone,
+          admin.phone,
           `Nova OS ${order.os_number}\nEmpresa: ${order.company_name}\nWhatsApp: ${order.contact_phone}\nResponsável no local: ${order.on_site_contact}\nProblema: ${order.problem_description}`
         );
       } catch (error) {
-        console.error('Falha ao enviar WhatsApp para criação da OS:', error.message);
+        console.error('Falha ao enviar WhatsApp para admin na abertura da OS:', error.message);
+      }
+    }
+    const author = await orderService.getOrderOpenedByUser(order.id);
+    if (author?.phone) {
+      try {
+        await integrationService.sendWhatsappText(
+          integration,
+          author.phone,
+          `Nova OS ${order.os_number}\nEmpresa: ${order.company_name}\nWhatsApp: ${order.contact_phone}\nResponsável no local: ${order.on_site_contact}\nProblema: ${order.problem_description}`
+        );
+      } catch (error) {
+        console.error('Falha ao enviar WhatsApp para autor da OS na abertura:', error.message);
       }
     }
     res.redirect(`/orders/${order.id}`);
@@ -229,16 +241,29 @@ app.post('/orders/:id/comments', requireAuth, async (req, res) => {
     }
 
     const integration = await integrationService.getIntegration('whatsapp');
-    const targets = await orderService.getNotificationTargetsForOrder(order.id);
-    for (const target of targets) {
-      if (!target.phone) continue;
+    const admins = await orderService.getActiveAdmins();
+    const author = await orderService.getOrderOpenedByUser(order.id);
+
+    for (const admin of admins) {
+      if (!admin.phone) continue;
       try {
         const lines = [`OS ${order.os_number} atualizada`];
         if (status && status !== order.status) lines.push(`Novo status: ${res.locals.statusLabel(status)}`);
         if (comment) lines.push(`Comentário: ${comment}`);
-        await integrationService.sendWhatsappText(integration, target.phone, lines.join('\n'));
+        await integrationService.sendWhatsappText(integration, admin.phone, lines.join('\n'));
       } catch (error) {
-        console.error('Falha ao enviar WhatsApp na atualização da OS:', error.message);
+        console.error('Falha ao enviar WhatsApp para admin na atualização da OS:', error.message);
+      }
+    }
+
+    if (author?.phone) {
+      try {
+        const lines = [`OS ${order.os_number} atualizada`];
+        if (status && status !== order.status) lines.push(`Novo status: ${res.locals.statusLabel(status)}`);
+        if (comment) lines.push(`Comentário: ${comment}`);
+        await integrationService.sendWhatsappText(integration, author.phone, lines.join('\n'));
+      } catch (error) {
+        console.error('Falha ao enviar WhatsApp para autor na atualização da OS:', error.message);
       }
     }
 
