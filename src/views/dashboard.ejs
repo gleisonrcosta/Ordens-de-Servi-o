@@ -28,14 +28,29 @@
       </div>
     </header>
     <section class="stats-grid">
-      <article class="stat blue"><strong><%= stats.openCount || 0 %></strong><span>Ordens Abertas</span></article>
-      <article class="stat orange"><strong><%= stats.progressCount || 0 %></strong><span>Em Andamento</span></article>
-      <article class="stat red"><strong><%= stats.canceledCount || 0 %></strong><span>Canceladas</span></article>
-      <article class="stat green"><strong><%= stats.doneCount || 0 %></strong><span>Concluídas</span></article>
+      <a class="stat-card blue <%= !filterStatus ? 'active' : '' %>" href="/dashboard">
+        <strong><%= stats.openCount || 0 %></strong>
+        <span>Abertas</span>
+      </a>
+      <a class="stat-card orange <%= filterStatus === 'in_progress' ? 'active' : '' %>" href="/dashboard?status=in_progress">
+        <strong><%= stats.progressCount || 0 %></strong>
+        <span>Em andamento</span>
+      </a>
+      <a class="stat-card red <%= filterStatus === 'canceled' ? 'active' : '' %>" href="/dashboard?status=canceled">
+        <strong><%= stats.canceledCount || 0 %></strong>
+        <span>Canceladas</span>
+      </a>
+      <a class="stat-card green <%= filterStatus === 'done' ? 'active' : '' %>" href="/dashboard?status=done">
+        <strong><%= stats.doneCount || 0 %></strong>
+        <span>Concluídas</span>
+      </a>
     </section>
     <section class="cards">
       <article class="panel">
-        <h2>Ordens Recentes</h2>
+        <h2><%= filterStatus ? 'Ordens filtradas' : 'Ordens Recentes' %></h2>
+        <% if (filterStatus) { %>
+          <p><a href="/dashboard">Limpar filtro</a></p>
+        <% } %>
         <table>
           <thead><tr><th>Número</th><th>Empresa</th><th>Status</th><th>Origem</th></tr></thead>
           <tbody>
@@ -43,7 +58,13 @@
               <tr>
                 <td><a href="/orders/<%= order.id %>"><%= order.os_number %></a></td>
                 <td><%= order.company_name %></td>
-                <td><%= order.status %></td>
+                <td>
+                  <% if (order.status === 'open') { %>Aberta<% } %>
+                  <% if (order.status === 'in_progress') { %>Em andamento<% } %>
+                  <% if (order.status === 'waiting_client') { %>Aguardando cliente<% } %>
+                  <% if (order.status === 'done') { %>Concluída<% } %>
+                  <% if (order.status === 'canceled') { %>Cancelada<% } %>
+                </td>
                 <td><%= order.source %></td>
               </tr>
             <% }) %>

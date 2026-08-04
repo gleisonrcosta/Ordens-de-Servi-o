@@ -59,6 +59,10 @@ app.post('/logout', (req, res) => {
 });
 
 app.get('/dashboard', requireAuth, async (req, res) => {
+  const statusFilter = String(req.query.status || '').trim();
+  const allowedStatuses = new Set(['open', 'in_progress', 'waiting_client', 'done', 'canceled']);
+  const filterStatus = allowedStatuses.has(statusFilter) ? statusFilter : '';
+  const whereClause = filterStatus ? 'WHERE status = ?' : '';
   const [stats] = await db.execute(`
     SELECT
       SUM(status = 'open') AS openCount,
@@ -67,8 +71,15 @@ app.get('/dashboard', requireAuth, async (req, res) => {
       SUM(status = 'done') AS doneCount
     FROM service_orders
   `);
-  const orders = await orderService.getRecentOrders(8);
-  res.render('dashboard', { stats: stats[0], orders });
+  const [orders] = await db.execute(
+    `SELECT id, os_number, company_name, status, source, created_at
+     FROM service_orders
+     ${whereClause}
+     ORDER BY created_at DESC
+     LIMIT 8`,
+    filterStatus ? [filterStatus] : []
+  );
+  res.render('dashboard', { stats: stats[0], orders, filterStatus });
 });
 
 app.get('/orders/new', requireAuth, (req, res) => res.render('orders-new', { error: null }));

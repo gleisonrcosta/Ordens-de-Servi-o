@@ -15,7 +15,13 @@
       <p><strong>Empresa:</strong> <%= order.company_name %></p>
       <p><strong>WhatsApp:</strong> <%= order.contact_phone %></p>
       <p><strong>Responsável no local:</strong> <%= order.on_site_contact %></p>
-      <p><strong>Status:</strong> <%= order.status %></p>
+      <p><strong>Status:</strong>
+        <% if (order.status === 'open') { %>Aberta<% } %>
+        <% if (order.status === 'in_progress') { %>Em andamento<% } %>
+        <% if (order.status === 'waiting_client') { %>Aguardando cliente<% } %>
+        <% if (order.status === 'done') { %>Concluída<% } %>
+        <% if (order.status === 'canceled') { %>Cancelada<% } %>
+      </p>
       <p><strong>Descrição:</strong> <%= order.problem_description %></p>
     </div>
     <div class="panel">
