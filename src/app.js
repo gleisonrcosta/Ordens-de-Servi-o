@@ -609,12 +609,12 @@ app.post("/api/webhook/whatsapp/os", async (req, res) => {
       `Nova OS ${order.os_number}`,
       body,
     );
-    const integration = await integrationService.getIntegration("whatsapp");
+    const whatsappIntegration = await integrationService.getIntegration("whatsapp");
     if (account.created && account.user?.phone) {
       try {
         const loginLink = "https://ticket.outcall.com.br";
         await integrationService.sendWhatsappText(
-          integration,
+          whatsappIntegration,
           account.user.phone,
           `Caso queira acompanhar o andamento da sua Ordem de Serviço, acesse o site ${loginLink} usando o usuário ${account.user.phone} e a senha ${temporaryPassword}.`,
         );
