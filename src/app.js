@@ -11,6 +11,7 @@ const integrationService = require("./services/integrationService");
 const db = require("./db");
 
 const app = express();
+const sseClients = new Set();
 
 app.set("view engine", "ejs");
 app.set("views", require("path").join(__dirname, "views"));
@@ -44,6 +45,17 @@ app.use((req, res, next) => {
   };
   next();
 });
+
+function broadcastOrderUpdate(orderId) {
+  const payload = JSON.stringify({ type: "order-updated", orderId: Number(orderId) });
+  for (const client of sseClients) {
+    try {
+      client.write(`data: ${payload}\n\n`);
+    } catch (error) {
+      sseClients.delete(client);
+    }
+  }
+}
 
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
@@ -149,6 +161,20 @@ app.get("/dashboard", requireAuth, async (req, res) => {
   res.render("dashboard", { stats: stats[0], orders, filterStatus });
 });
 
+app.get("/events", requireAuth, async (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders?.();
+  res.write("event: ready\ndata: connected\n\n");
+
+  sseClients.add(res);
+
+  req.on("close", () => {
+    sseClients.delete(res);
+  });
+});
+
 app.get("/orders/new", requireAuth, (req, res) =>
   res.render("orders-new", { error: null }),
 );
@@ -185,6 +211,7 @@ app.post("/orders", requireAuth, async (req, res) => {
       "created",
       "Ordem aberta via sistema.",
     );
+    broadcastOrderUpdate(order.id);
 
     const integration = await integrationService.getIntegration("whatsapp");
     const admins = await orderService.getActiveAdmins();
@@ -300,6 +327,7 @@ app.post("/orders/:id/comments", requireAuth, async (req, res) => {
         );
       }
     }
+    broadcastOrderUpdate(req.params.id);
 
     if (comment) {
       await orderService.addOrderComment(
@@ -322,6 +350,7 @@ app.post("/orders/:id/comments", requireAuth, async (req, res) => {
         );
       }
     }
+    broadcastOrderUpdate(req.params.id);
 
     const integration = await integrationService.getIntegration("whatsapp");
     const admins = await orderService.getActiveAdmins();
@@ -586,7 +615,7 @@ app.post("/api/webhook/whatsapp/os", async (req, res) => {
     }
     const { companyName, contactPhone, onSiteContact, problemDescription } =
       req.body;
-    const temporaryPassword = "123mudar";
+    const temporaryPassword = "123MUDAR";
     const requesterName = String(
       onSiteContact || companyName || contactPhone || "Cliente",
     ).trim();
@@ -603,20 +632,30 @@ app.post("/api/webhook/whatsapp/os", async (req, res) => {
       "whatsapp",
     );
     const order = await orderService.getServiceOrderById(created.id);
-    const body = `OS ${order.os_number} aberta via WhatsApp para ${order.company_name}. Contato: ${order.contact_phone}. Local: ${order.on_site_contact}. Problema: ${order.problem_description}`;
-    await orderService.notifyAdmins(
-      order.id,
-      `Nova OS ${order.os_number}`,
-      body,
-    );
     const whatsappIntegration = await integrationService.getIntegration("whatsapp");
+
+    if (requesterPhone) {
+      try {
+        await integrationService.sendWhatsappText(
+          whatsappIntegration,
+          requesterPhone,
+          `A sua Ordem de Serviço ${order.os_number} foi aberta com sucesso.`
+        );
+      } catch (error) {
+        console.error(
+          "Falha ao enviar confirmação de abertura para o solicitante:",
+          error.message,
+        );
+      }
+    }
+
     if (account.created && account.user?.phone) {
       try {
         const loginLink = "https://ticket.outcall.com.br";
         await integrationService.sendWhatsappText(
           whatsappIntegration,
           account.user.phone,
-          `Caso queira acompanhar o andamento da sua Ordem de Serviço, acesse o site ${loginLink} usando o usuário ${account.user.phone} e a senha ${temporaryPassword}.`,
+          `Para acompanhar o andamento da sua Ordem de Serviço, acesse ${loginLink} usando o usuário ${account.user.phone} e a senha provisória ${temporaryPassword}.`,
         );
       } catch (error) {
         console.error(
@@ -625,6 +664,22 @@ app.post("/api/webhook/whatsapp/os", async (req, res) => {
         );
       }
     }
+
+    const body = `OS ${order.os_number} aberta via WhatsApp para ${order.company_name}. WhatsApp: ${order.contact_phone}. Responsável no local: ${order.on_site_contact}. Problema: ${order.problem_description}`;
+    try {
+      const adminTargets = await orderService.getActiveAdmins();
+      for (const admin of adminTargets) {
+        if (!admin.phone) continue;
+        await integrationService.sendWhatsappText(
+          whatsappIntegration,
+          admin.phone,
+          `Nova OS ${order.os_number}\nEmpresa: ${order.company_name}\nWhatsApp: ${order.contact_phone}\nResponsável no local: ${order.on_site_contact}\nProblema: ${order.problem_description}`,
+        );
+      }
+    } catch (error) {
+      console.error("Falha ao enviar mensagem para administradores:", error.message);
+    }
+
     return res.json({
       success: true,
       message: `Ordem de serviço ${order.os_number} aberta com sucesso.`,

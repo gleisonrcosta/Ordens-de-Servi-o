@@ -68,5 +68,13 @@
       </article>
     </section>
   </main>
+  <script>
+    (() => {
+      const source = new EventSource('/events');
+      source.addEventListener('message', () => {
+        window.location.reload();
+      });
+    })();
+  </script>
 </body>
 </html>
